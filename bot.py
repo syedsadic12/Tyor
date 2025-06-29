@@ -1,19 +1,25 @@
 import os
-import asyncio
-import threading
-from flask import Flask
+from flask import Flask, request
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
+from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
 
 BOT_TOKEN = os.getenv('BOT_TOKEN')
 CHANNELS = os.getenv('CHANNELS').split(',')
 FINAL_CODE = os.getenv('FINAL_CODE')
+BASE_URL = os.getenv('BASE_URL')  # https://tyor-1.onrender.com
 
 app = Flask(__name__)
+application = Application.builder().token(BOT_TOKEN).build()
 
 @app.route('/')
 def home():
-    return "Bot is running successfully!"
+    return "Bot is live!"
+
+@app.route(f'/{BOT_TOKEN}', methods=['POST'])
+async def webhook():
+    update = Update.de_json(request.get_json(force=True), application.bot)
+    await application.process_update(update)
+    return "ok"
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
@@ -25,7 +31,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     reply_markup = InlineKeyboardMarkup(keyboard)
     await update.message.reply_text("📲 Join this group for more earning or Start earning online", reply_markup=reply_markup)
 
-async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def verify(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
     user_id = query.from_user.id
@@ -46,15 +52,15 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await query.edit_message_text("❌ You haven't joined all required channels.\nPlease join and click Verify again.")
 
-async def run_bot():
-    application = ApplicationBuilder().token(BOT_TOKEN).build()
+def main():
     application.add_handler(CommandHandler("start", start))
-    application.add_handler(CallbackQueryHandler(button))
-    await application.run_polling()
-
-def start_bot():
-    asyncio.run(run_bot())
+    application.add_handler(CallbackQueryHandler(verify))
+    # Set webhook
+    application.run_webhook(
+        listen="0.0.0.0",
+        port=10000,
+        url=f"{BASE_URL}/{BOT_TOKEN}"
+    )
 
 if __name__ == '__main__':
-    threading.Thread(target=start_bot).start()
-    app.run(host="0.0.0.0", port=10000)
+    main()
