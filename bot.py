@@ -6,7 +6,7 @@ from telegram.ext import Application, CommandHandler, CallbackQueryHandler, Cont
 BOT_TOKEN = os.getenv('BOT_TOKEN')
 CHANNELS = os.getenv('CHANNELS').split(',')
 FINAL_CODE = os.getenv('FINAL_CODE')
-BASE_URL = os.getenv('BASE_URL')  # https://tyor-1.onrender.com
+BASE_URL = os.getenv('BASE_URL')  # e.g., https://tyor-1.onrender.com
 
 app = Flask(__name__)
 application = Application.builder().token(BOT_TOKEN).build()
@@ -29,7 +29,10 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         [InlineKeyboardButton("✅ Verify", callback_data='verify')]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    await update.message.reply_text("📲 Join this group for more earning or Start earning online", reply_markup=reply_markup)
+    await update.message.reply_text(
+        "📲 Join these channels and click Verify to get your code.",
+        reply_markup=reply_markup
+    )
 
 async def verify(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -55,13 +58,17 @@ async def verify(update: Update, context: ContextTypes.DEFAULT_TYPE):
 def main():
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CallbackQueryHandler(verify))
-    
-    # ✅ Corrected webhook call
-    application.run_webhook(
-        listen="0.0.0.0",
-        port=10000,
-        webhook_url=f"{BASE_URL}/{BOT_TOKEN}"
-    )
+
+    # Set webhook explicitly
+    import asyncio
+    async def set_webhook():
+        await application.bot.set_webhook(f"{BASE_URL}/{BOT_TOKEN}")
+        print("✅ Webhook set successfully!")
+
+    asyncio.get_event_loop().run_until_complete(set_webhook())
+
+    # Start Flask server
+    app.run(host="0.0.0.0", port=10000)
 
 if __name__ == '__main__':
     main()
