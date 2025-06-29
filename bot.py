@@ -1,11 +1,19 @@
-
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
+from flask import Flask
+import threading
 import os
 
+# Telegram bot configs
 BOT_TOKEN = os.getenv('BOT_TOKEN')
 CHANNELS = os.getenv('CHANNELS').split(',')
 FINAL_CODE = os.getenv('FINAL_CODE')
+
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return "Bot is running."
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
@@ -38,11 +46,12 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await query.edit_message_text("❌ You haven't joined all required channels.\nPlease join and then click Verify.")
 
-def main():
+def run_bot():
     app = ApplicationBuilder().token(BOT_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CallbackQueryHandler(button))
     app.run_polling()
 
 if __name__ == '__main__':
-    main()
+    threading.Thread(target=run_bot).start()
+    app.run(host='0.0.0.0', port=10000)  # Fake web server to avoid port error
