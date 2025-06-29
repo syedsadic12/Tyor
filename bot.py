@@ -55,11 +55,12 @@ async def verify(update: Update, context: ContextTypes.DEFAULT_TYPE):
 def main():
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CallbackQueryHandler(verify))
-    # Set webhook
+    
+    # ✅ Corrected webhook call
     application.run_webhook(
         listen="0.0.0.0",
         port=10000,
-        url=f"{BASE_URL}/{BOT_TOKEN}"
+        webhook_url=f"{BASE_URL}/{BOT_TOKEN}"
     )
 
 if __name__ == '__main__':
