@@ -1,7 +1,5 @@
-python-telegram-bot[flask]==20.7
+python-telegram-bot==20.7
 Flask[async]
 gunicorn
-python-dotenv
-requests
 aiohttp
-uvicorn
+requests
