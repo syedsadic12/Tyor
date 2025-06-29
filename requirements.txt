@@ -1,2 +1,2 @@
-python-telegram-bot[webhooks]==20.3
-flask[async]
+python-telegram-bot[flask]
+Flask[async]
