@@ -3,10 +3,12 @@ from telegram.ext import Application, CommandHandler, CallbackQueryHandler, Cont
 import asyncio
 import os
 
+# 🔐 Bot config from environment variables
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 CHANNELS = os.getenv("CHANNELS", "@trygfxm,@trygfx,@moviezmp").split(",")
 FINAL_CODE = os.getenv("FINAL_CODE", "00poonmoon98")
 
+# 🟢 /start command
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
         [InlineKeyboardButton("📢 Join Channel 1", url="https://t.me/trygfxm")],
@@ -17,12 +19,13 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     reply_markup = InlineKeyboardMarkup(keyboard)
     await update.message.reply_text("📲 Join all channels and click Verify", reply_markup=reply_markup)
 
+# 🔐 Verification logic
 async def verify(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
     user_id = query.from_user.id
-
     joined_all = True
+
     for channel in CHANNELS:
         try:
             member = await context.bot.get_chat_member(chat_id=channel.strip(), user_id=user_id)
@@ -30,7 +33,7 @@ async def verify(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 joined_all = False
                 break
         except Exception as e:
-            print(f"Error checking {channel}: {e}")
+            print(f"❌ Error checking {channel}: {e}")
             joined_all = False
             break
 
@@ -39,6 +42,7 @@ async def verify(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await query.edit_message_text("❌ You haven't joined all required channels.\nJoin and click Verify again.")
 
+# 🧠 Main app setup
 async def main():
     app = Application.builder().token(BOT_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
@@ -47,5 +51,11 @@ async def main():
     print("🤖 Bot is running with polling...")
     await app.run_polling()
 
+# ✅ Safe event loop for Render
 if __name__ == '__main__':
-    asyncio.run(main())
+    try:
+        asyncio.get_event_loop().run_until_complete(main())
+    except RuntimeError:
+        import nest_asyncio
+        nest_asyncio.apply()
+        asyncio.get_event_loop().run_until_complete(main())
