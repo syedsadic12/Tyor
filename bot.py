@@ -1,14 +1,15 @@
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
+import nest_asyncio
 import asyncio
 import os
 
-# 🔐 Bot config from environment variables
-BOT_TOKEN = os.getenv("BOT_TOKEN")
-CHANNELS = os.getenv("CHANNELS", "@trygfxm,@trygfx,@moviezmp").split(",")
-FINAL_CODE = os.getenv("FINAL_CODE", "00poonmoon98")
+# Configs
+BOT_TOKEN = "7754895064:AAGStX_lle4NsaTGej9udtX1msRsaC99I8U"
+CHANNELS = ["@trygfxm", "@trygfx", "@moviezmp"]
+FINAL_CODE = "00poonmoon98"
 
-# 🟢 /start command
+# /start command
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
         [InlineKeyboardButton("📢 Join Channel 1", url="https://t.me/trygfxm")],
@@ -19,7 +20,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     reply_markup = InlineKeyboardMarkup(keyboard)
     await update.message.reply_text("📲 Join all channels and click Verify", reply_markup=reply_markup)
 
-# 🔐 Verification logic
+# Verification
 async def verify(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
@@ -32,30 +33,24 @@ async def verify(update: Update, context: ContextTypes.DEFAULT_TYPE):
             if member.status not in ['member', 'administrator', 'creator']:
                 joined_all = False
                 break
-        except Exception as e:
-            print(f"❌ Error checking {channel}: {e}")
+        except:
             joined_all = False
             break
 
     if joined_all:
         await query.edit_message_text(f"✅ Verified!\nYour code: `{FINAL_CODE}`", parse_mode='Markdown')
     else:
-        await query.edit_message_text("❌ You haven't joined all required channels.\nJoin and click Verify again.")
+        await query.edit_message_text("❌ You haven't joined all required channels.\nPlease join and click Verify again.")
 
-# 🧠 Main app setup
+# Run bot
 async def main():
     app = Application.builder().token(BOT_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CallbackQueryHandler(verify))
-
-    print("🤖 Bot is running with polling...")
+    print("🤖 Bot is running...")
     await app.run_polling()
 
-# ✅ Safe event loop for Render
-if __name__ == '__main__':
-    try:
-        asyncio.get_event_loop().run_until_complete(main())
-    except RuntimeError:
-        import nest_asyncio
-        nest_asyncio.apply()
-        asyncio.get_event_loop().run_until_complete(main())
+# Start event loop
+if __name__ == "__main__":
+    nest_asyncio.apply()
+    asyncio.get_event_loop().run_until_complete(main())
